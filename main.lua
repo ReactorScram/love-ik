@@ -160,7 +160,19 @@ function love.draw ()
 	
 	for i = 1, #joints - 1 do
 		local a, b = joints [i], joints [i + 1]
-		love.graphics.line (a [1], a [2], b [1], b [2])
+		local direction = {
+			(b [1] - a [1]) / arm_lengths [i], 
+			(b [2] - a [2]) / arm_lengths [i],
+		}
+		
+		local radius_a = radii [i]
+		local radius_b = radii [i + 1]
+		
+		love.graphics.line (
+			a [1] + direction [1] * radius_a, 
+			a [2] + direction [2] * radius_a, 
+			b [1] - direction [1] * radius_b, 
+			b [2] - direction [2] * radius_b)
 	end
 	
 	love.graphics.setColor (0, 255, 0)
