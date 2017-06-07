@@ -48,11 +48,18 @@ local function forward_kinematics (root, arm_lengths, arm_angles)
 		pos [2] = pos [2] + length * math.sin (rads)
 		
 		table.insert (t, {pos [1], pos [2]})
+	end
+	
+	for i = 1, #arm_lengths do
+		local center = t [i]
+		local end_affector = t [#t]
 		
-		table.insert (derivatives, {
-			length * radians (-math.sin (rads)),
-			length * radians (math.cos (rads)),
-		})
+		local derivative = {
+			-(end_affector [2] - center [2]),
+			end_affector [1] - center [1],
+		}
+		
+		table.insert (derivatives, derivative)
 	end
 	
 	return t, derivatives
