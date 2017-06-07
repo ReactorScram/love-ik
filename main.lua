@@ -2,12 +2,14 @@ local root = {400, 300}
 local radius = 20
 
 local arm_lengths = {
-	160,
+	300,
+	200,
 	120,
 }
 
 local arm_angles = {
-	0, 
+	0,
+	45,
 	90,
 }
 
@@ -114,7 +116,7 @@ local function solve (ratio)
 	local weight_length = length (weights)
 	
 	local max_speed = 5
-	local speed = math.min (max_speed, diff_dist * 0.5)
+	local speed = math.min (max_speed, diff_dist * 0.25)
 	
 	local weight_scale = speed
 	if weight_length > 1 then
