@@ -2,16 +2,30 @@ local root = {400, 300}
 local radius = 20
 
 local arm_lengths = {
-	300,
-	200,
-	120,
+	100,
+	90,
+	80,
+	70,
+	60,
 }
 
 local arm_angles = {
 	0,
-	45,
-	90,
+	0,
+	0,
+	0,
+	0,
 }
+
+-- End of user config
+
+local reverse_reach = 0
+for i = 2, #arm_lengths do
+	reverse_reach = reverse_reach + arm_lengths [i]
+end
+
+local min_radius = math.max (0, arm_lengths [1] - reverse_reach)
+local max_radius = arm_lengths [1] + reverse_reach
 
 local target-- = {0, 0}
 
@@ -185,14 +199,46 @@ function love.draw ()
 	love.graphics.print ("Click / drag the mouse", 20, 20)
 end
 
+local function set_target (t)
+	local diff = {
+		t [1] - root [1],
+		t [2] - root [2],
+	}
+	
+	local dist = length (diff)
+	
+	local unit = {
+		diff [1] / dist,
+		diff [2] / dist,
+	}
+	
+	if dist > max_radius then
+		return {
+			unit [1] * max_radius + root [1],
+			unit [2] * max_radius + root [2],
+		}
+	elseif dist < min_radius then
+		if dist > 0.5 then
+			return {
+				unit [1] * min_radius + root [1],
+				unit [2] * min_radius + root [2],
+			}
+		else
+			return t
+		end
+	else
+		return t
+	end
+end
+
 function love.mousepressed (x, y, button)
 	if button == 1 then
-		target = {x, y}
+		target = set_target {x, y}
 	end
 end
 
 function love.mousemoved (x, y, button)
 	if love.mouse.isDown (1) then
-		target = {x, y}
+		target = set_target {x, y}
 	end
 end
