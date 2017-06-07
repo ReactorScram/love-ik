@@ -139,8 +139,8 @@ end
 
 function love.update (dt)
 	solve (1.0)
-	--solve (0.5)
-	--solve (0.25)
+	solve (0.5)
+	solve (0.25)
 end
 
 function love.draw ()
@@ -161,6 +161,10 @@ function love.draw ()
 	
 	love.graphics.setColor (0, 255, 0)
 	love.graphics.circle ("line", target [1], target [2], radius * 0.25)
+	
+	love.graphics.setColor (0, 212, 0)
+	
+	love.graphics.print ("Move the mouse", 20, 20)
 end
 
 function love.mousemoved (x, y)
