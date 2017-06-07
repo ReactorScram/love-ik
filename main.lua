@@ -138,7 +138,7 @@ local function solve (ratio)
 		arm_angles [i] = theta
 	end
 	
-	print (arm_angles [1], arm_angles [2])
+	--print (arm_angles [1], arm_angles [2])
 end
 
 function love.update (dt)
@@ -170,9 +170,17 @@ function love.draw ()
 	
 	love.graphics.setColor (0, 212, 0)
 	
-	love.graphics.print ("Move the mouse", 20, 20)
+	love.graphics.print ("Click / drag the mouse", 20, 20)
 end
 
-function love.mousemoved (x, y)
-	target = {x, y}
+function love.mousepressed (x, y, button)
+	if button == 1 then
+		target = {x, y}
+	end
+end
+
+function love.mousemoved (x, y, button)
+	if love.mouse.isDown (1) then
+		target = {x, y}
+	end
 end
