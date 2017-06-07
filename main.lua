@@ -13,7 +13,7 @@ local arm_angles = {
 	90,
 }
 
-local target = {0, 0}
+local target-- = {0, 0}
 
 local function get_radius (i)
 	local t = (i - 1) / (#arm_angles)
@@ -86,6 +86,10 @@ local function length (v)
 end
 
 local function solve (ratio)
+	if not target then
+		return
+	end
+	
 	local positions, derivatives = forward_kinematics (root, arm_lengths, arm_angles)
 	
 	local end_affector = positions [#positions]
@@ -160,7 +164,9 @@ function love.draw ()
 	end
 	
 	love.graphics.setColor (0, 255, 0)
-	love.graphics.circle ("line", target [1], target [2], radius * 0.25)
+	if target then
+		love.graphics.circle ("line", target [1], target [2], radius * 0.25)
+	end
 	
 	love.graphics.setColor (0, 212, 0)
 	
