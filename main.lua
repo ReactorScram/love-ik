@@ -2,7 +2,7 @@ local root = {400, 300}
 local radius = 20
 
 local arm_lengths = {
-	150,
+	160,
 	120,
 }
 
@@ -10,6 +10,18 @@ local arm_angles = {
 	0, 
 	90,
 }
+
+local target = {0, 0}
+
+local function get_radius (i)
+	local t = (i - 1) / (#arm_angles)
+	return radius * (1 - t) + radius * 0.5 * t
+end
+
+local radii = {}
+for i = 1, #arm_angles + 1 do
+	radii [i] = get_radius (i)
+end
 
 local function radians (degrees)
 	return degrees * math.pi / 180.0
@@ -20,27 +32,106 @@ local function forward_kinematics (root, arm_lengths, arm_angles)
 		{root [1], root [2]},
 	}
 	
+	local derivatives = {
+		
+	}
+	
 	local pos = {root [1], root [2]}
 	
 	for i = 1, #arm_lengths do
 		local length = arm_lengths [i]
 		local angle = arm_angles [i]
 		
-		pos [1] = pos [1] + length * math.cos (radians (angle))
-		pos [2] = pos [2] + length * math.sin (radians (angle))
+		local rads = radians (angle)
+		
+		pos [1] = pos [1] + length * math.cos (rads)
+		pos [2] = pos [2] + length * math.sin (rads)
 		
 		table.insert (t, {pos [1], pos [2]})
+		
+		table.insert (derivatives, {
+			length * radians (-math.sin (rads)),
+			length * radians (math.cos (rads)),
+		})
 	end
 	
-	return t
+	return t, derivatives
 end
 
 function love.load ()
 	-- Yep
 end
 
-function love.update (dt)
+local function dot (a, b)
+	local sum = 0
 	
+	for i = 1, #a do
+		sum = sum + a [i] * b [i]
+	end
+	
+	return sum
+end
+
+local function length (v)
+	return math.sqrt (dot (v, v))
+end
+
+local function solve (ratio)
+	local positions, derivatives = forward_kinematics (root, arm_lengths, arm_angles)
+	
+	local end_affector = positions [#positions]
+	
+	local diff = {
+		target [1] - end_affector [1],
+		target [2] - end_affector [2],
+	}
+	
+	local diff_dist = length (diff)
+	
+	local epsilon = 0.5
+	if diff_dist < epsilon then
+		return
+	end
+	
+	local diff_unit = {
+		diff [1] / diff_dist,
+		diff [2] / diff_dist,
+	}
+	
+	local weights = {}
+	
+	for i = 1, #derivatives do
+		weights [i] = dot (derivatives [i], diff_unit)
+	end
+	
+	local weight_length = length (weights)
+	
+	local max_speed = 5
+	local speed = math.min (max_speed, diff_dist * 0.5)
+	
+	local weight_scale = speed
+	if weight_length > 1 then
+		weight_scale = speed / weight_length
+	end
+	
+	for i = 1, #arm_angles do
+		local theta = arm_angles [i]
+		theta = theta + weight_scale * ratio * weights [i]
+		if theta > 180 then
+			theta = theta - 360
+		elseif theta < -180 then
+			theta = theta + 360
+		end
+		arm_angles [i] = theta
+	end
+	
+	print (arm_angles [1], arm_angles [2])
+end
+
+function love.update (dt)
+	solve (1.0)
+	--solve (0.5)
+	--solve (0.25)
 end
 
 function love.draw ()
@@ -48,8 +139,21 @@ function love.draw ()
 	
 	local joints = forward_kinematics (root, arm_lengths, arm_angles)
 	
+	love.graphics.setColor (255, 255, 255)
+	
 	for i, joint in ipairs (joints) do
-		local t = (i - 1) / (#joints - 1)
-		love.graphics.circle ("line", joint [1], joint [2], radius * (1 - t) + radius * 0.5 * t)
+		love.graphics.circle ("line", joint [1], joint [2], radii [i])
 	end
+	
+	for i = 1, #joints - 1 do
+		local a, b = joints [i], joints [i + 1]
+		love.graphics.line (a [1], a [2], b [1], b [2])
+	end
+	
+	love.graphics.setColor (0, 255, 0)
+	love.graphics.circle ("line", target [1], target [2], radius * 0.25)
+end
+
+function love.mousemoved (x, y)
+	target = {x, y}
 end
